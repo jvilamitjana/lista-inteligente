@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 // ─── DATOS BASE ────────────────────────────────────────────────────────────────
 const RECETAS_BASE = [
@@ -650,109 +650,30 @@ function TabLista({ plan }) {
   );
 }
 
-// ─── SUGERENCIAS IA ───────────────────────────────────────────────────────────
-function SugerenciasIA({ onVerDetalle }) {
-  const [comensales, setComensales] = useState(4);
-  const [loading, setLoading] = useState(false);
-  const [sugerencias, setSugerencias] = useState([]);
-  const [error, setError] = useState(null);
-  const [mostrar, setMostrar] = useState(false);
-
-  const buscarSugerencias = async () => {
-    setLoading(true);
-    setError(null);
-    setSugerencias([]);
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: `Eres un chef experto. Devuelve SOLO un objeto JSON con exactamente este formato sin texto adicional ni backticks:
-{"recetas":[{"nombre":"string","emoji":"string","tiempo":number,"categoria":"string","ingredientes":[{"nombre":"string","cantidad":number,"unidad":"string"}]}]}
-Genera 3 recetas para ${comensales} personas. Las cantidades deben ser exactas para ${comensales} personas.`,
-          messages: [{ role: "user", content: `Sugiere 3 recetas variadas y saludables para ${comensales} persona${comensales !== 1 ? "s" : ""}. Incluye una de cada tipo: proteína, vegetariana, y libre elección.` }]
-        })
-      });
-      const data = await response.json();
-      const text = data.content.map(i => i.text || "").join("");
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      setSugerencias(parsed.recetas.map((r, i) => ({
-        ...r, id: 9000 + i, porciones_base: comensales, esIA: true
-      })));
-    } catch (e) {
-      setError("No se pudieron cargar sugerencias. Intenta de nuevo.");
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ margin: "0 16px 16px", background: "#1E3A2E", borderRadius: 16, overflow: "hidden", border: "1px solid #7CB51833" }}>
-      <button onClick={() => setMostrar(!mostrar)} style={{
-        width: "100%", padding: "14px 18px", background: "transparent", border: "none",
-        display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 20 }}>✨</span>
-          <span style={{ color: "#7CB518", fontWeight: 800, fontSize: 14 }}>Sugerencias con IA</span>
-        </div>
-        <span style={{ color: "#7CB518", fontSize: 18, transform: mostrar ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>›</span>
-      </button>
-
-      {mostrar && (
-        <div style={{ padding: "0 18px 18px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            <span style={{ color: "#A0B890", fontSize: 13 }}>Para</span>
-            <NumericStepper value={comensales} onChange={setComensales} />
-            <span style={{ color: "#A0B890", fontSize: 13 }}>personas</span>
-          </div>
-          <button onClick={buscarSugerencias} disabled={loading} style={{
-            width: "100%", padding: "11px 0", borderRadius: 12, border: "none",
-            background: loading ? "#3A5A3A" : "linear-gradient(135deg, #7CB518, #5A8A10)",
-            color: "#fff", fontSize: 14, fontWeight: 800, cursor: loading ? "default" : "pointer",
-            transition: "opacity 0.2s"
-          }}>
-            {loading ? "🔄 Generando..." : "🍴 Generar sugerencias"}
-          </button>
-
-          {error && <div style={{ color: "#C9643A", fontSize: 13, marginTop: 10, textAlign: "center" }}>{error}</div>}
-
-          {sugerencias.length > 0 && (
-            <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-              {sugerencias.map((r, i) => (
-                <div key={i} onClick={() => onVerDetalle(r)} style={{
-                  background: "#243824", borderRadius: 12, padding: "12px 14px",
-                  display: "flex", alignItems: "center", gap: 12, cursor: "pointer"
-                }}>
-                  <span style={{ fontSize: 26 }}>{r.emoji}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: "#F5F0E8", fontWeight: 800, fontSize: 14 }}>{r.nombre}</div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 3 }}>
-                      <Badge text={r.categoria} color={CATEGORIAS_COLORES[r.categoria] || "#7CB518"} />
-                      <span style={{ color: "#7CB518", fontSize: 12 }}>⏱ {r.tiempo}min</span>
-                    </div>
-                  </div>
-                  <span style={{ color: "#3A5A3A", fontSize: 20 }}>›</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── APP PRINCIPAL ─────────────────────────────────────────────────────────────
 export default function App() {
   const [tab, setTab] = useState("recetas");
-  const [plan, setPlan] = useState([]);
-  const [misRecetas, setMisRecetas] = useState([]);
+  const [plan, setPlan] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("li_plan")) || []; }
+    catch { return []; }
+  });
+  const [misRecetas, setMisRecetas] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("li_misrecetas")) || []; }
+    catch { return []; }
+  });
   const [modalReceta, setModalReceta] = useState(null);
   const [modalCrear, setModalCrear] = useState(false);
   const [editandoReceta, setEditandoReceta] = useState(null);
+
+  useEffect(() => {
+    try { localStorage.setItem("li_plan", JSON.stringify(plan)); }
+    catch {}
+  }, [plan]);
+
+  useEffect(() => {
+    try { localStorage.setItem("li_misrecetas", JSON.stringify(misRecetas)); }
+    catch {}
+  }, [misRecetas]);
 
   const agregarAlPlan = (receta, comensales) => {
     setPlan(prev => [...prev, { receta, comensales }]);
@@ -810,10 +731,7 @@ export default function App() {
       {/* CONTENIDO */}
       <div style={{ paddingTop: 16 }}>
         {tab === "recetas" && (
-          <>
-            <SugerenciasIA onVerDetalle={setModalReceta} />
-            <TabRecetas onVerDetalle={setModalReceta} />
-          </>
+          <TabRecetas onVerDetalle={setModalReceta} />
         )}
         {tab === "mis" && (
           <TabMisRecetas
