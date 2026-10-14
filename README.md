@@ -68,3 +68,21 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## Atril · piano para aprender acordes y escalas
+
+App web independiente (pensada para móvil) en `public/piano/`. Con `npm start` se abre en
+[http://localhost:3000/piano/](http://localhost:3000/piano/); también funciona abriendo
+`public/piano/index.html` directamente y se puede instalar como PWA.
+
+- **Acordes**: diccionario de 29 tipos (tríadas, séptimas, extensiones) en las 12 tonalidades,
+  con inversiones, notas coloreadas por función y explicación de cómo se construye cada uno.
+- **Identificar**: toca teclas y la app nombra el intervalo o acorde, su inversión y lecturas alternativas.
+- **Escalas**: 13 escalas y modos, patrón de tonos/semitonos, digitación, metrónomo con compás
+  de entrada, tempo ajustable, manos separadas o juntas y acordes diatónicos.
+- **Practicar**: plan de 20 rutinas en 3 niveles con progreso guardado, entrenamiento auditivo
+  (acordes e intervalos) y el juego «Encuentra el acorde».
+
+El sonido de piano se sintetiza en tiempo real con Web Audio (parciales inarmónicos, martillo,
+cuerdas dobles, reverberación y pedal), así que no necesita descargar muestras.
+En iPhone, si no se oye nada, desactiva el modo silencio.

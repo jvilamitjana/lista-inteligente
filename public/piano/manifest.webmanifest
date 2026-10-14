@@ -1,0 +1,11 @@
+{
+  "name": "Atril · acordes y escalas al piano",
+  "short_name": "Atril",
+  "description": "Piano interactivo para aprender acordes, identificarlos y practicar escalas",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0F1620",
+  "theme_color": "#0F1620",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
