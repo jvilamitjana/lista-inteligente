@@ -1,0 +1,20 @@
+{
+  "name": "Afinador Vocal",
+  "short_name": "Afinador",
+  "description": "Detecta la nota que cantas o tocas y muestra la desafinación con precisión de décimas de cent.",
+  "id": "/afinador/",
+  "start_url": "/afinador/",
+  "scope": "/afinador/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1116",
+  "theme_color": "#0E1116",
+  "lang": "es",
+  "categories": ["music", "education"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

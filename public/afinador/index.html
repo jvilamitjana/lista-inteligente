@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0E1116" />
+  <meta name="description" content="Afinador de voz e instrumentos de alta precisión: detecta la nota que cantas o tocas con precisión de décimas de cent." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Afinador" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <title>Afinador Vocal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <h1>Afinador <span>Vocal</span></h1>
+      <div class="top-actions">
+        <button id="btnPower" class="icon-btn" aria-label="Pausar o reanudar micrófono" title="Micrófono">
+          <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg>
+        </button>
+        <button id="btnSettings" class="icon-btn" aria-label="Ajustes" title="Ajustes">
+          <svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5L19.4 13ZM13 15.5A3.5 3.5 0 1 1 13 8.5a3.5 3.5 0 0 1 0 7Z" transform="translate(-1 0)"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="readout" aria-live="off">
+      <div class="note-wrap">
+        <div id="noteName" class="note">–</div>
+        <div id="noteOctave" class="octave"></div>
+      </div>
+      <div class="numbers">
+        <div id="cents" class="cents">— ¢</div>
+        <div id="freq" class="freq">— Hz</div>
+        <div id="targetInfo" class="target-info"></div>
+      </div>
+    </section>
+
+    <section class="gauge-card">
+      <canvas id="gauge" aria-label="Indicador de desafinación en cents"></canvas>
+    </section>
+
+    <section class="history-card">
+      <div class="card-head">
+        <span>Trazado <small id="zoomHint" class="zoom-hint"></small></span>
+        <span id="clarity" class="pill">señal —</span>
+      </div>
+      <canvas id="history" aria-label="Historial del tono"></canvas>
+    </section>
+
+    <section class="stats" aria-label="Estadísticas de la nota sostenida">
+      <div class="stat"><b id="stInTune">—</b><span>en tolerancia</span></div>
+      <div class="stat"><b id="stMean">—</b><span>desvío medio</span></div>
+      <div class="stat"><b id="stSd">—</b><span>estabilidad σ</span></div>
+      <div class="stat"><b id="stDur">—</b><span>duración</span></div>
+    </section>
+
+    <section class="mode-card">
+      <div class="segmented" role="tablist">
+        <button id="modeFree" class="seg active" role="tab">Libre</button>
+        <button id="modeTarget" class="seg" role="tab">Nota objetivo</button>
+      </div>
+      <div id="targetControls" class="target-controls" hidden>
+        <button id="tDown" class="step" aria-label="Bajar semitono">−</button>
+        <div class="target-note"><span id="tName">La4</span><small id="tFreq">440.00 Hz</small></div>
+        <button id="tUp" class="step" aria-label="Subir semitono">+</button>
+        <button id="tLock" class="chip" title="Usar la nota que estás cantando">Fijar actual</button>
+        <button id="tPlay" class="chip play" title="Escuchar la nota de referencia">▶ Escuchar</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Pantalla inicial: el micrófono necesita un gesto del usuario -->
+  <div id="startOverlay" class="overlay">
+    <div class="start-box">
+      <img src="icon.svg" alt="" width="88" height="88" />
+      <h2>Afinador Vocal</h2>
+      <p>Canta o toca una nota y verás al instante cuántos cents te desvías, con precisión de décimas de cent.</p>
+      <button id="btnStart" class="primary">🎤 Activar micrófono</button>
+      <p id="startError" class="error" hidden></p>
+      <p class="hint">Consejo: usa auriculares al escuchar la nota de referencia y mantén el móvil a unos 20–40 cm.</p>
+    </div>
+  </div>
+
+  <!-- Ajustes -->
+  <div id="settingsSheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel" role="dialog" aria-label="Ajustes">
+      <div class="sheet-head"><h2>Ajustes</h2><button class="icon-btn" data-close aria-label="Cerrar">✕</button></div>
+
+      <label class="row">
+        <span>Referencia La4</span>
+        <span class="stepper">
+          <button data-a4="-1">−1</button><button data-a4="-0.1">−.1</button>
+          <output id="a4Out">440.0 Hz</output>
+          <button data-a4="0.1">+.1</button><button data-a4="1">+1</button>
+        </span>
+      </label>
+
+      <div class="row">
+        <span>Notación</span>
+        <span class="segmented small">
+          <button class="seg" data-notation="latin">Do Re Mi</button>
+          <button class="seg" data-notation="english">C D E</button>
+        </span>
+      </div>
+
+      <div class="row">
+        <span>Tolerancia</span>
+        <span class="segmented small">
+          <button class="seg" data-tol="2">±2¢</button>
+          <button class="seg" data-tol="5">±5¢</button>
+          <button class="seg" data-tol="10">±10¢</button>
+          <button class="seg" data-tol="20">±20¢</button>
+        </span>
+      </div>
+
+      <div class="row">
+        <span>Suavizado</span>
+        <span class="segmented small">
+          <button class="seg" data-smooth="0">Nada</button>
+          <button class="seg" data-smooth="1">Bajo</button>
+          <button class="seg" data-smooth="2">Medio</button>
+          <button class="seg" data-smooth="3">Alto</button>
+        </span>
+      </div>
+
+      <div class="row">
+        <span>Historial</span>
+        <span class="segmented small">
+          <button class="seg" data-hist="5">5 s</button>
+          <button class="seg" data-hist="10">10 s</button>
+          <button class="seg" data-hist="20">20 s</button>
+        </span>
+      </div>
+
+      <label class="row">
+        <span>Sensibilidad</span>
+        <input id="sens" type="range" min="0" max="100" step="1" />
+      </label>
+
+      <p class="hint">El suavizado sólo afecta a los números y la aguja; el trazado muestra el tono real (incluido el vibrato). Las estadísticas se calculan sobre cada nota sostenida.</p>
+    </div>
+  </div>
+
+  <script src="pitch.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

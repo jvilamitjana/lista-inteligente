@@ -1,3 +1,23 @@
+# Afinador Vocal (`/afinador/`)
+
+App móvil (PWA instalable, funciona sin conexión) para practicar la afinación de la voz o de un instrumento.
+Está en `public/afinador/` y se publica junto a la Lista Inteligente en la ruta **`/afinador/`**.
+
+- **Detección de alta precisión**: algoritmo McLeod (NSDF por FFT) + refinado de máxima verosimilitud
+  armónica. Error < 0,1 cents con tono limpio y < 1 cent con ruido (ver `npm run test:afinador`).
+- Nota, frecuencia (centésimas de Hz) y desviación en **décimas de cent**.
+- Doble indicador: escala ±50 ¢ y **lupa ±10 ¢** con marcas de medio cent.
+- **Trazado** del tono en el tiempo (muestra vibrato, ataques y deriva); toca para ampliar a ±50 ¢.
+- **Estadísticas** por nota sostenida: % en tolerancia, desvío medio y estabilidad (σ).
+- **Modo nota objetivo** con tono de referencia y botón «Fijar actual».
+- Ajustes: La4 de referencia (400–480 Hz, pasos de 0,1), notación Do-Re-Mi / C-D-E, tolerancia,
+  suavizado, duración del historial y sensibilidad. Mantiene la pantalla encendida mientras escucha.
+
+Requiere HTTPS (o `localhost`) para acceder al micrófono. Para probarla: `npm start` y abre
+`http://localhost:3000/afinador/`, o tras `npm run build` sirve la carpeta `build/`.
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
